@@ -1,0 +1,88 @@
+<project
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.lwtsc</groupId>
+    <artifactId>parent</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <relativePath>../parent</relativePath>
+  </parent>
+
+  <artifactId>checker</artifactId>
+  <packaging>jar</packaging>
+
+  <properties>
+    <maven.compiler.source>8</maven.compiler.source>
+    <maven.compiler.target>8</maven.compiler.target>
+    <maven.compiler.release>8</maven.compiler.release>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.lwtsc</groupId>
+      <artifactId>theory</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.lwtsc</groupId>
+      <artifactId>qual</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.checkerframework</groupId>
+      <artifactId>checker</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.checkerframework</groupId>
+      <artifactId>checker-qual</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.errorprone</groupId>
+      <artifactId>javac</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.checkerframework</groupId>
+      <artifactId>framework-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <profiles>
+    <profile>
+      <id>checkerframework-test-jdk9orlater</id>
+      <activation>
+        <jdk>[9,)</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <argLine>
+                --add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED
+                --add-exports=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED
+                --add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED
+                --add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED
+                --add-exports=jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED
+                --add-exports=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED
+                --add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED
+                --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED
+                --add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED
+              </argLine>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+</project>
