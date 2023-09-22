@@ -84,6 +84,12 @@ public class LightWeightTypeStateTransfer extends CFAbstractTransfer<CFValue, Li
     // Typestate is "corrupt" on exception (or whatever was declared in the annotations)
     Map<TypeMirror, Set<Block>> exceptionalSuccessors = getExceptionalSuccessors(n.getBlock());
     Map<TypeMirror, LightWeightTypeStateStore> exceptionalStores = new LinkedHashMap<>(exceptionalSuccessors.size());
+
+    @Nullable Map<TypeMirror, LightWeightTypeStateStore> oldExceptionalStores = result.getExceptionalStores();
+    if (oldExceptionalStores != null) {
+      exceptionalStores.putAll(oldExceptionalStores);
+    }
+
     for (TypeMirror exnType : exceptionalSuccessors.keySet()) {
       LightWeightTypeStateStore store = in.getRegularStore().copy();
       AnnotationMirror newState = converter.toAnnotationMirror(
