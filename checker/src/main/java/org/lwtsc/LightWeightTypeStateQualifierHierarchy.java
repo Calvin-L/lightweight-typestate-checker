@@ -1,5 +1,6 @@
 package org.lwtsc;
 
+import org.checkerframework.framework.type.GenericAnnotatedTypeFactory;
 import org.checkerframework.framework.type.MostlyNoElementQualifierHierarchy;
 import org.checkerframework.framework.util.QualifierKind;
 
@@ -7,15 +8,18 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.util.Elements;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
-import java.util.Objects;
 
 class LightWeightTypeStateQualifierHierarchy extends MostlyNoElementQualifierHierarchy {
 
   private final TypeStateConverter converter;
 
-  public LightWeightTypeStateQualifierHierarchy(Collection<Class<? extends Annotation>> qualifierClasses, Elements elements, TypeStateConverter converter) {
-    super(qualifierClasses, elements);
-    this.converter = Objects.requireNonNull(converter);
+  public LightWeightTypeStateQualifierHierarchy(
+      Collection<Class<? extends Annotation>> qualifierClasses,
+      Elements elements,
+      GenericAnnotatedTypeFactory<?, ?, ?, ?> atypeFactory,
+      TypeStateConverter converter) {
+    super(qualifierClasses, elements, atypeFactory);
+    this.converter = converter;
   }
 
   @Override

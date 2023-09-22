@@ -59,9 +59,6 @@ public class ExceptionTransitions {
     try {
       tx.write();
     } catch (FileNotFoundException exception) {
-      // Actually, this should work!
-      // See underlying issue: https://github.com/typetools/checker-framework/issues/5936
-      // :: error: (contracts.precondition)
       tx.commit();
     }
   }

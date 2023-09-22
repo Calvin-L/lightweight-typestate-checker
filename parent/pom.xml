@@ -12,7 +12,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <checkerframework.version>3.35.0</checkerframework.version>
+    <checkerframework.version>3.38.0</checkerframework.version>
     <errorprone.javac.version>9+181-r4173-1</errorprone.javac.version>
   </properties>
 

@@ -65,7 +65,7 @@ public class LightWeightTypeStateStore extends CFAbstractStore<CFValue, LightWei
 
     if (!atypeFactory.isSideEffectFree(method)) {
       AliasingAnnotatedTypeFactory aliasTypeFactory =
-          atypeFactory.getChecker().getTypeFactoryOfSubchecker(AliasingChecker.class);
+          atypeFactory.getChecker().getTypeFactoryOfSubcheckerOrNull(AliasingChecker.class);
       CFStore aliasInformation = aliasTypeFactory != null
           ? aliasTypeFactory.getStoreBefore(methodInvocationNode)
           : null;
