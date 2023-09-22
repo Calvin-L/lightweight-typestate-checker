@@ -80,7 +80,7 @@ class TypeStateConverter {
     this.unknownState = AnnotationBuilder.fromClass(env.getElementUtils(), UnknownState.class);
     this.noState = AnnotationBuilder.fromClass(env.getElementUtils(), StateBottom.class);
 
-    Function<StateID, AnnotationMirror> makeSingletonAnnotation = state -> makeAnnotation(Collections.singleton(state));
+    Function<StateID, AnnotationMirror> makeSingletonAnnotation = state -> makeAnnotation(env, state_dot_value, Collections.singleton(state));
 
     this.toAnnotationMirrorVisitor = new StateIDSet.Visitor<AnnotationMirror>() {
       @Override
@@ -96,13 +96,13 @@ class TypeStateConverter {
           case 1:
             return singletonStateAnnotationMirrors.computeIfAbsent(states.iterator().next(), makeSingletonAnnotation);
           default:
-            return makeAnnotation(states);
+            return makeAnnotation(env, state_dot_value, states);
         }
       }
     };
   }
 
-  private AnnotationMirror makeAnnotation(Set<StateID> states) {
+  private static AnnotationMirror makeAnnotation(ProcessingEnvironment env, ExecutableElement state_dot_value, Set<StateID> states) {
     return new AnnotationBuilder(env, State.class)
         .setValue(state_dot_value, states.stream().map(StateID::getID).collect(Collectors.toList()))
         .build();
@@ -182,9 +182,14 @@ class TypeStateConverter {
   public @Nullable StateID getDeclaredNewStateOnReturn(AnnotatedTypeFactory factory, ExecutableElement method) {
     @Nullable AnnotationMirror stateTransitionAnnotation =
         factory.getDeclAnnotation(method, NewStateOnReturn.class);
-    return stateTransitionAnnotation == null
-        ? null
-        : StateID.of(AnnotationUtils.getElementValue(stateTransitionAnnotation, newStateOnReturn_dot_value, String.class));
+    if (stateTransitionAnnotation == null) {
+      return null;
+    }
+    @Nullable String val = AnnotationUtils.getElementValue(stateTransitionAnnotation, newStateOnReturn_dot_value, String.class);
+    if (val == null) {
+      return null;
+    }
+    return StateID.of(val);
   }
 
   private List<AnnotationMirror> getRawNewStateOnReturnIfDeclarations(AnnotatedTypeFactory factory, ExecutableElement method) {
@@ -216,12 +221,15 @@ class TypeStateConverter {
     StateID resultState = null;
     for (AnnotationMirror a : annotations) {
       boolean result = AnnotationUtils.getElementValueBoolean(a, newStateOnReturnIf_dot_result, true);
-      StateID state = StateID.of(AnnotationUtils.getElementValue(a, newStateOnReturnIf_dot_state, String.class));
-      if (result == value) {
-        if (resultState == null) {
-          resultState = state;
-        } else {
-          // TODO: report error?
+      @Nullable String newStateOnReturnIf_dot_state_value = AnnotationUtils.getElementValue(a, newStateOnReturnIf_dot_state, String.class);
+      if (newStateOnReturnIf_dot_state_value != null) {
+        StateID state = StateID.of(newStateOnReturnIf_dot_state_value);
+        if (result == value) {
+          if (resultState == null) {
+            resultState = state;
+          } else {
+            // TODO: report error?
+          }
         }
       }
     }
@@ -255,8 +263,13 @@ class TypeStateConverter {
     Map<Type.ClassType, StateID> result = new LinkedHashMap<>();
     for (AnnotationMirror a : getRawNewStateOnExceptionDeclarations(factory, method)) {
       Type.ClassType exception = AnnotationUtils.getElementValue(a, newStateOnException_dot_exception, Type.ClassType.class);
-      StateID state = StateID.of(AnnotationUtils.getElementValue(a, newStateOnException_dot_state, String.class));
-      result.put(exception, state);
+      if (exception != null) {
+        @Nullable String newStateOnException_dot_state_value = AnnotationUtils.getElementValue(a, newStateOnException_dot_state, String.class);
+        if (newStateOnException_dot_state_value != null) {
+          StateID state = StateID.of(newStateOnException_dot_state_value);
+          result.put(exception, state);
+        }
+      }
     }
     return result;
   }

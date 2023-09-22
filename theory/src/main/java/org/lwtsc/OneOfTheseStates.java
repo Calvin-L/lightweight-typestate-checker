@@ -1,5 +1,7 @@
 package org.lwtsc;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -24,7 +26,7 @@ class OneOfTheseStates implements StateIDSet {
   }
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     OneOfTheseStates that = (OneOfTheseStates) o;

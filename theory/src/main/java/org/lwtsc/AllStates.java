@@ -1,5 +1,7 @@
 package org.lwtsc;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 class AllStates implements StateIDSet {
 
   public static final AllStates INSTANCE = new AllStates();
@@ -18,7 +20,7 @@ class AllStates implements StateIDSet {
   }
 
   @Override
-  public boolean equals(Object other) {
+  public boolean equals(@Nullable Object other) {
     return other instanceof AllStates;
   }
 

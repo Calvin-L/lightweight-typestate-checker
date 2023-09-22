@@ -1,6 +1,7 @@
 package org.lwtsc;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.common.aliasing.AliasingAnnotatedTypeFactory;
 import org.checkerframework.common.aliasing.AliasingChecker;
 import org.checkerframework.common.aliasing.qual.Unique;
 import org.checkerframework.dataflow.cfg.node.MethodInvocationNode;
@@ -10,9 +11,9 @@ import org.checkerframework.dataflow.expression.JavaExpression;
 import org.checkerframework.framework.flow.CFAbstractAnalysis;
 import org.checkerframework.framework.flow.CFAbstractStore;
 import org.checkerframework.framework.flow.CFAbstractValue;
+import org.checkerframework.framework.flow.CFStore;
 import org.checkerframework.framework.flow.CFValue;
 import org.checkerframework.framework.type.AnnotatedTypeFactory;
-import org.checkerframework.framework.type.GenericAnnotatedTypeFactory;
 
 import javax.lang.model.element.ExecutableElement;
 import java.util.Collections;
@@ -31,17 +32,17 @@ public class LightWeightTypeStateStore extends CFAbstractStore<CFValue, LightWei
   private boolean isDefinitelyPreservedByMethodCall(
       MethodInvocationNode methodCall,
       JavaExpression expr,
-      AnnotatedTypeFactory aliasTypeFactory,
+      @Nullable AnnotatedTypeFactory aliasTypeFactory,
       @Nullable CFAbstractValue<?> aliasInformationForExpr) {
 
     return expr.isUnmodifiableByOtherCode() ||
         (aliasInformationForExpr != null && aliasInformationForExpr.getAnnotations()
             .stream()
-            .anyMatch(a -> aliasTypeFactory.areSameByClass(a, Unique.class)));
+            .anyMatch(a -> aliasTypeFactory != null && aliasTypeFactory.areSameByClass(a, Unique.class)));
 
   }
 
-  private static @Nullable CFAbstractValue<?> getValue(@Nullable CFAbstractStore<?, ?> store, JavaExpression e) {
+  private static <V extends CFAbstractValue<V>> @Nullable V getValue(@Nullable CFAbstractStore<V, ?> store, JavaExpression e) {
     return store != null ? store.getValue(e) : null;
   }
 
@@ -53,14 +54,19 @@ public class LightWeightTypeStateStore extends CFAbstractStore<CFValue, LightWei
     return Collections.unmodifiableMap(arrayValues);
   }
 
+  @SuppressWarnings("assignment") // thisValue is not marked @Nullable, although it can be null
+  protected void clearThisValue() {
+    thisValue = null;
+  }
+
   @Override
   public void updateForMethodCall(MethodInvocationNode methodInvocationNode, AnnotatedTypeFactory atypeFactory, CFValue val) {
     ExecutableElement method = methodInvocationNode.getTarget().getMethod();
 
     if (!atypeFactory.isSideEffectFree(method)) {
-      GenericAnnotatedTypeFactory<?, ?, ?, ?> aliasTypeFactory =
+      AliasingAnnotatedTypeFactory aliasTypeFactory =
           atypeFactory.getChecker().getTypeFactoryOfSubchecker(AliasingChecker.class);
-      CFAbstractStore<?, ?> aliasInformation = aliasTypeFactory != null
+      CFStore aliasInformation = aliasTypeFactory != null
           ? aliasTypeFactory.getStoreBefore(methodInvocationNode)
           : null;
 
@@ -70,7 +76,7 @@ public class LightWeightTypeStateStore extends CFAbstractStore<CFValue, LightWei
           aliasTypeFactory,
           getValue(aliasInformation, e)));
 
-      thisValue = null;
+      clearThisValue();
 
       fieldValues.keySet().removeIf(e -> !isDefinitelyPreservedByMethodCall(
           methodInvocationNode,

@@ -25,6 +25,7 @@ public class LightWeightTypeStateAnnotatedTypeFactory extends GenericAnnotatedTy
 
   private final TypeStateConverter converter;
 
+  @SuppressWarnings("method.invocation") // postInit() call not allowed
   public LightWeightTypeStateAnnotatedTypeFactory(BaseTypeChecker checker) {
     super(checker);
 
@@ -33,7 +34,7 @@ public class LightWeightTypeStateAnnotatedTypeFactory extends GenericAnnotatedTy
     // transfer rules, but c'est la vie...
     super.sideEffectsUnrefineAliases = true;
 
-    this.converter = new TypeStateConverter(getProcessingEnv());
+    this.converter = new TypeStateConverter(checker.getProcessingEnvironment());
     postInit();
   }
 

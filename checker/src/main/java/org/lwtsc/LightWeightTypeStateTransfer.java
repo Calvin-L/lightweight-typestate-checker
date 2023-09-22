@@ -15,6 +15,7 @@ import org.checkerframework.dataflow.expression.JavaExpression;
 import org.checkerframework.framework.flow.CFAbstractAnalysis;
 import org.checkerframework.framework.flow.CFAbstractStore;
 import org.checkerframework.framework.flow.CFAbstractTransfer;
+import org.checkerframework.framework.flow.CFAbstractValue;
 import org.checkerframework.framework.flow.CFValue;
 import org.checkerframework.framework.type.AnnotatedTypeFactory;
 
@@ -70,7 +71,8 @@ public class LightWeightTypeStateTransfer extends CFAbstractTransfer<CFValue, Li
           result.getResultValue(),
           result.getThenStore(),
           result.getElseStore(),
-          result.getExceptionalStores());
+          result.getExceptionalStores(),
+          result.storeChanged());
 
       if (ifTrue != null) {
         replaceIntoStore(result.getThenStore(), receiver, converter.toAnnotationMirror(StateIDSet.singleton(ifTrue)));
@@ -82,7 +84,11 @@ public class LightWeightTypeStateTransfer extends CFAbstractTransfer<CFValue, Li
     }
 
     // Typestate is "corrupt" on exception (or whatever was declared in the annotations)
-    Map<TypeMirror, Set<Block>> exceptionalSuccessors = getExceptionalSuccessors(n.getBlock());
+    Block block = n.getBlock();
+    Map<TypeMirror, Set<Block>> exceptionalSuccessors =
+        block != null // TODO: is block ever actually null?
+          ? getExceptionalSuccessors(block)
+          : Collections.emptyMap();
     Map<TypeMirror, LightWeightTypeStateStore> exceptionalStores = new LinkedHashMap<>(exceptionalSuccessors.size());
 
     @Nullable Map<TypeMirror, LightWeightTypeStateStore> oldExceptionalStores = result.getExceptionalStores();
@@ -111,11 +117,13 @@ public class LightWeightTypeStateTransfer extends CFAbstractTransfer<CFValue, Li
             result.getResultValue(),
             result.getThenStore(),
             result.getElseStore(),
-            exceptionalStores)
+            exceptionalStores,
+            result.storeChanged())
         : new RegularTransferResult<>(
             result.getResultValue(),
             result.getRegularStore(),
-            exceptionalStores);
+            exceptionalStores,
+            result.storeChanged());
   }
 
   /**
@@ -128,7 +136,7 @@ public class LightWeightTypeStateTransfer extends CFAbstractTransfer<CFValue, Li
         : Collections.emptyMap();
   }
 
-  protected void replaceIntoStores(TransferResult<?, ? extends CFAbstractStore<?, ?>> result, JavaExpression e, AnnotationMirror newAnnotation) {
+  protected <V extends CFAbstractValue<V>, S extends CFAbstractStore<V, S>> void replaceIntoStores(TransferResult<V, S> result, JavaExpression e, AnnotationMirror newAnnotation) {
     if (result.containsTwoStores()) {
       replaceIntoStore(result.getThenStore(), e, newAnnotation);
       replaceIntoStore(result.getElseStore(), e, newAnnotation);

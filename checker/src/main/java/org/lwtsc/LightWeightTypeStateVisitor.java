@@ -4,6 +4,7 @@ import com.sun.source.tree.ArrayTypeTree;
 import com.sun.source.tree.ParameterizedTypeTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.VariableTree;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.common.basetype.BaseTypeChecker;
 import org.checkerframework.common.basetype.BaseTypeVisitor;
 import org.checkerframework.framework.source.DiagMessage;
@@ -66,12 +67,14 @@ public class LightWeightTypeStateVisitor extends BaseTypeVisitor<LightWeightType
   public Void visitVariable(VariableTree node, Void p) {
     super.visitVariable(node, p);
 
-    VariableElement elt = TreeUtils.elementFromDeclaration(node);
-    AnnotatedTypeMirror declaredType = atypeFactory.fromElement(elt);
-    checkType(node.getType(), declaredType);
+    @Nullable VariableElement elt = TreeUtils.elementFromDeclaration(node);
+    if (elt != null) {
+      AnnotatedTypeMirror declaredType = atypeFactory.fromElement(elt);
+      checkType(node.getType(), declaredType);
 
-    if (elt != null && elt.getKind().isField()) {
-      checkStability("lwtsc.invariant.unstable.field", node, declaredType);
+      if (elt.getKind().isField()) {
+        checkStability("lwtsc.invariant.unstable.field", node, declaredType);
+      }
     }
 
     return null;
